@@ -173,7 +173,7 @@ def main_worker(gpu, ngpus_per_node, args):
                  criterion=SupConLoss_rank(num_class=num_classes,ranking_temperature=density).cuda()
         train_loss=train(train_loader,model,criterion, optimizer, epoch,args)
         if ((epoch+1) % 100 == 0  and  100< epoch < 1000) or (epoch==999):
-            save_file = 'ccl/cifra160/cifra_100_gr_2_epoch_{epoch}.pth'.format(epoch=epoch)
+            save_file = ''.format(epoch=epoch)
             torch.save(model.state_dict(),save_file)   
 
 def cluster (train_loader_cluster,model,cluster_number,args):
