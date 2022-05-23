@@ -17,24 +17,26 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import os, sys
 sys.path.append(os.getcwd())
-from resnet  import SupConResNet,LinearClassifier,NormedLinear
+from resnet import SupConResNet,LinearClassifier,NormedLinear
 from sklearn.metrics import confusion_matrix
 from unbalance import IMBALANCECIFAR10, IMBALANCECIFAR100
-from utils import*
 from sample import ClassAwareSampler
 from loss import*
+from utils import*
+
+
 
 parser = argparse.ArgumentParser(description='PyTorch Cifar Training')
 parser.add_argument('--dataset', default='cifar100', help='dataset setting')
 parser.add_argument('--imb_type', default="exp", type=str, help='imbalance type')
 parser.add_argument('--imb_factor', default=0.01, type=float, help='imbalance factor')
 parser.add_argument('--feat_dim', default=128, type=int, help='feature dimenmion for model')
-parser.add_argument('--train_rule', default='Reweight', type=str, help='data sampling strategy for train loader')
+parser.add_argument('--train_rule', default='DRW', type=str, help='data sampling strategy for train loader')
 parser.add_argument('--rand_number', default=0, type=int, help='fix random number for data sampling')
 parser.add_argument('--exp_str', default='0', type=str, help='number to indicate which experiment it is')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=45, type=int, metavar='N',
+parser.add_argument('--epochs', default=200, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -48,14 +50,8 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
 parser.add_argument('--wd', '--weight-decay', default=0, type=float,
-                    metavar='W', help='weight decay (default: 1e-4)',
+                    metavar='W', help='weight decay (default: 0)',
                     dest='weight_decay')
-parser.add_argument('-p', '--print-freq', default=10, type=int,
-                    metavar='N', help='print frequency (default: 10)')
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-                    help='use pre-trained model')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 parser.add_argument('--gpu', default=None, type=int,
@@ -63,7 +59,6 @@ parser.add_argument('--gpu', default=None, type=int,
 parser.add_argument('--root_log',type=str, default='log')
 parser.add_argument('--root_model', type=str, default='checkpoint')
 best_acc1 = 0
-
 
 
 def main():
@@ -96,14 +91,14 @@ def main_worker(gpu, ngpus_per_node, args):
     model  =  SupConResNet(feat_dim=args.feat_dim)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = torch.nn.DataParallel(model).cuda()
-    PATH = 'ccl/cifra160/cifra_100_gr_2_epoch_999.pth'
+    PATH = ''#your idea model path
     model.load_state_dict(torch.load(PATH))
     if  args.train_rule == 'Reweight' or args.train_rule == 'DRW' :
-        MLP = NormedLinear(64,num_classes)
+        classify = NormedLinear(64,num_classes)
     else:
-        MLP = LinearClassifier(num_classes=num_classes)
-    MLP = torch.nn.DataParallel(MLP).cuda()   
-    optimizer = torch.optim.SGD(MLP.parameters(), args.lr,
+        classify = LinearClassifier(num_classes=num_classes)
+    classify = torch.nn.DataParallel(classify).cuda()   
+    optimizer = torch.optim.SGD(classify.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     cudnn.benchmark = True
@@ -114,18 +109,6 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-    '''
-    transform_train = transforms.Compose([
-        transforms.RandomResizedCrop(size=32, scale=(0.2, 1.)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomApply([
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
-        ], p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-     '''
     transform_val = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -145,10 +128,11 @@ def main_worker(gpu, ngpus_per_node, args):
     args.cls_num_list = cls_num_list
     if args.train_rule == 'DRW' or args.train_rule == 'CE' :
         train_sampler = None
-    elif args.train_rule == 'kk':
+    elif args.train_rule == 'CB':
         train_sampler = ClassAwareSampler(train_dataset) 
     elif args.train_rule == 'Reweight':
         train_sampler = ImbalancedDatasetSampler(train_dataset)
+       
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
@@ -156,11 +140,11 @@ def main_worker(gpu, ngpus_per_node, args):
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=100, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+    
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(optimizer, epoch, args)
         if args.train_rule == 'DRW' :
             train_sampler = None
-            #idx = epoch // 120
             idx=1
             betas = [0, 0.9999]
             effective_num = 1.0 - np.power(betas[idx], cls_num_list)
@@ -171,31 +155,30 @@ def main_worker(gpu, ngpus_per_node, args):
         elif args.train_rule == 'Reweight' :
             criterion = LDAMLoss(cls_num_list=cls_num_list, max_m=0.5, s=30).cuda(args.gpu)
         else:
-            criterion = nn.CrossEntropyLoss().cuda()
-        train(train_loader, model,MLP,criterion, optimizer, epoch, args,flag='train')
-        acc1 =validate(val_loader, model,MLP,criterion, epoch, args,flag='val')
+            criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+        train(train_loader, model,classify,criterion, optimizer, epoch, args,flag='train')
+        acc1 =validate(val_loader, model,classify,criterion, epoch, args,flag='val')
         best_acc1 = max(acc1, best_acc1)
         print('acc/test_top1_best', best_acc1, epoch)
         output_best = 'Best Prec@1: %.3f\n' % (best_acc1)
         print(output_best)
         
         
-def train(train_loader, model,MLP,criterion, optimizer, epoch, args,flag='train'):
+def train(train_loader, model,classify,criterion, optimizer, epoch, args,flag='train'):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
+    
     # switch to train mode
-    MLP.train()
+    classify.train()
     model.eval()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     end = time.time()
-    for i, (input, target,cluster) in enumerate(train_loader):
+    for i, (input,target,cluster_target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
-
-        
         input = input.to(device)
         target = target.to(device)
         with torch.no_grad():
@@ -204,9 +187,8 @@ def train(train_loader, model,MLP,criterion, optimizer, epoch, args,flag='train'
                 out,features = features
             else:
                 features = features
-        output = MLP(features.detach())
+        output = classify(features.detach())
         loss = criterion(output, target)
-      #  loss = loss_c + 0.1*loss_d
      
         # measure accuracy and record loss       
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -225,11 +207,10 @@ def train(train_loader, model,MLP,criterion, optimizer, epoch, args,flag='train'
         torch.cuda.empty_cache() 
     output = ('{flag} Results: Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Loss {loss.avg:.5f}'
                 .format(flag=flag, top1=top1, top5=top5, loss=losses))
-    print(output)
-    torch.cuda.empty_cache()    
+    print(output)  
+    torch.cuda.empty_cache()
 
-
-def validate(val_loader, model,MLP,criterion, epoch, args,flag='val'):
+def validate(val_loader, model,classify,criterion, epoch, args,flag='val'):
     batch_time = AverageMeter('Time', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -237,7 +218,7 @@ def validate(val_loader, model,MLP,criterion, epoch, args,flag='val'):
     
     # switch to evaluate mode
     model.eval()
-    MLP.eval()
+    classify.eval()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     all_preds = []
     all_targets = []
@@ -252,7 +233,7 @@ def validate(val_loader, model,MLP,criterion, epoch, args,flag='val'):
                 out,features = features
             else:
                 features = features
-            output = MLP(features)
+            output = classify(features)
             loss = criterion(output,target)
 
             # measure accuracy and record loss
@@ -277,14 +258,13 @@ def validate(val_loader, model,MLP,criterion, epoch, args,flag='val'):
         out_cls_acc = '%s Class Accuracy: %s'%(flag,(np.array2string(cls_acc, separator=',', formatter={'float_kind':lambda x: "%.3f" % x})))
         print(output)
         print(out_cls_acc)
-        
-
+       
     return top1.avg
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     epoch = epoch + 1
-    if args.train_rule == 'kk' or args.train_rule == 'Reweight':
+    if args.train_rule == 'CB' or args.train_rule == 'Reweight':
         if epoch <= 5:
             lr = args.lr * epoch / 5
         else:
