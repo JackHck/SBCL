@@ -15,14 +15,6 @@ import random
 from PIL import ImageFilter
 
 
-def save_checkpoint(args, state, is_best):
-    
-    filename = '%s/%s/ckpt.pth.tar' % (args.root_model, args.store_name)
-    torch.save(state, filename)
-    if is_best:
-        shutil.copyfile(filename, filename.replace('pth.tar', 'best.pth.tar'))
-
-
 class AverageMeter(object):
     
     def __init__(self, name, fmt=':f'):
