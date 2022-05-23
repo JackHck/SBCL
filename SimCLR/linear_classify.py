@@ -18,8 +18,6 @@ import torchvision.datasets as datasets
 import os, sys
 sys.path.append(os.getcwd())
 from resnet  import SupConResNet,LinearClassifier,NormedLinear
-#import wide_resnet
-#from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix
 from unbalance import IMBALANCECIFAR10, IMBALANCECIFAR100
 from utils import*
