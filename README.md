@@ -1,7 +1,10 @@
 # Subclass-balancing-contrastive-learning
 This repository provides the  code for paper: <br>
 **Subclass-balancing Contrastive Learning for Long-tailed Recognition**
+<p align="center">
+    <img src="./sbcl.jpg" width="500"><br>
 
+  
 ## Overview
 In this paper, we prospose subclass-balancing contrastive learning (SBCL),
 a novel supervised contrastive learning defined on subclasses, which are the clusters within each
@@ -45,4 +48,30 @@ To evalute the representation learning, run
   [Imagenet dataset folder]
 </pre>
 
+## ImageNet-LT dataset
+You should download ImageNet-LT dataset manually.
+### First-stage train
+To perform SBCL using 8-gpu machines, run:
+<pre>python main_pcl.py \ 
+  -a resnet50 \ 
+  --lr 0.03 \
+  --batch-size 256 \
+  --temperature 0.2 \
+  --mlp --aug-plus --cos (only activated for PCL v2) \	
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  --exp-dir experiment_pcl
+  [Imagenet dataset folder]
+</pre>
+### Second-stage train
+To evalute the representation learning, run
+<pre>python eval_cls_imagenet.py --pretrained [your pretrained model] \
+  -a resnet50 \ 
+  --lr 5 \
+  --batch-size 256 \
+  --id ImageNet_linear \ 
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  [Imagenet dataset folder]
+</pre>
+NOTE: 
+many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
 
