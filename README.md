@@ -35,7 +35,7 @@ To perform SBCL using 2-gpu machines, run:
   --temperature 0.1 
 </pre>
 NOTE:
-Only change the dataset and imb_factor can change the CIFAR dataset.  For the CIFAR-10-LT dataset, <pre> -step </pre>
+Only change the dataset and imb_factor can change the CIFAR dataset.  For the CIFAR-10-LT dataset, <pre> -step 100 </pre>
 ### Second-stage train
 To evalute the representation learning, run
 <pre>python SimCLR/linear_classify.py  \
