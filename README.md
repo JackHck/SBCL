@@ -2,7 +2,7 @@
 This repository provides the  code for paper: <br>
 **Subclass-balancing Contrastive Learning for Long-tailed Recognition**
 
-### Overview
+## Overview
 In this paper, we prospose subclass-balancing contrastive learning (SBCL),
 a novel supervised contrastive learning defined on subclasses, which are the clusters within each
 head class, have comparable size as tail classes, and are adaptively updated during the training.
@@ -15,9 +15,34 @@ the former learns representations with balanced and compact subclasses, the latt
 structure on subclass level by encouraging the same class’s subslasses to be closer to each other than
 to any different class’s subclasses. Hence, it can learn an accurate classifier distinguishing original
 classes while enjoy both the instance- and subclass-balance.
-### Requiremenmts
+## Requiremenmts
 * ImageNet dataset
 * Python ≥ 3.6
 * PyTorch ≥ 1.4
 * pip install kmeans_pytorch (the iteration be set at less than 25)
-### CIFAR datasets
+## CIFAR dataset
+The code will help you download the CIFAR dataset.
+### First-stage train
+To perform SBCL using 2-gpu machines, run:
+<pre>python main_pcl.py \ 
+  -a resnet50 \ 
+  --lr 0.03 \
+  --batch-size 256 \
+  --temperature 0.2 \
+  --mlp --aug-plus --cos (only activated for PCL v2) \	
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  --exp-dir experiment_pcl
+  [Imagenet dataset folder]
+</pre>
+### Second-stage train
+To evalute the representation learning, run
+<pre>python eval_cls_imagenet.py --pretrained [your pretrained model] \
+  -a resnet50 \ 
+  --lr 5 \
+  --batch-size 256 \
+  --id ImageNet_linear \ 
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  [Imagenet dataset folder]
+</pre>
+
+
