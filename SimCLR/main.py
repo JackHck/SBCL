@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='PyTorch Cifar Training')
 parser.add_argument('--dataset', default='cifar100', help='dataset setting')
 parser.add_argument('--imb_type', default="exp", type=str, help='imbalance type')
 parser.add_argument('--imb_factor', default=0.01, type=float, help='imbalance factor')
-parser.add_argument('--train_rule', default='Ranking', type=str, help='loss function for constrastive learning')
+parser.add_argument('--train_rule', default='Rank', type=str, help='loss function for constrastive learning')
 parser.add_argument('--rand_number', default=0, type=int, help='fix random number for data sampling')
 parser.add_argument('--feat_dim', default=128, type=int, help='feature dimenmion for model')
 parser.add_argument('--exp_str', default='0', type=str, help='number to indicate which experiment it is')
@@ -43,20 +43,18 @@ parser.add_argument('-b', '--batch-size', default=1024, type=int,
                     metavar='N',
                     help='mini-batch size')
 parser.add_argument( '--step', default=10, type=int,
-                    metavar='N')
+                    metavar='N' ,help='steps for updating cluster')
 parser.add_argument('--lr', '--learning-rate', default=0.5, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--lr_decay_rate', type=float, default=0.1,
+parser.add_argument('--lr_decay_rate', default=0.1,type=float,
                         help='decay rate for learning rate')
-parser.add_argument('--wd', '--weight-decay', default=2e-4, type=float,
+parser.add_argument('--wd', '--weight-decay',default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    help='evaluate model on validation set')
-parser.add_argument('--pretrained', dest='pretrained', action='store_true',
-                    help='use pre-trained model')
+parser.add_argument('--cluster', default=10, type=int,
+                    metavar='N', help='the low limit of cluster')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 parser.add_argument('--gpu', default=None, type=int,
@@ -68,12 +66,9 @@ parser.add_argument('--cosine', default='True',
 parser.add_argument('--root_log',type=str, default='log')
 parser.add_argument('--root_model', type=str, default='checkpoint')
 
-best_train_acc1 = 100000
-
 
 def main():
     args = parser.parse_args()
-    
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -91,7 +86,6 @@ def main():
     ngpus_per_node = torch.cuda.device_count()
     main_worker(args.gpu, ngpus_per_node, args)
 def main_worker(gpu, ngpus_per_node, args):
-    global best_train_acc1
     args.gpu = gpu
     if args.gpu is not None:
         print("Use GPU: {} for training".format(args.gpu))
@@ -148,7 +142,7 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader_cluster = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-    cluster_number= [t//max(min(cls_num_list),10) for t in cls_num_list]
+    cluster_number= [t//max(min(cls_num_list),args.cluster) for t in cls_num_list]
     for index, value in enumerate(cluster_number):
          if value==0:
             cluster_number[index]=1
@@ -159,9 +153,9 @@ def main_worker(gpu, ngpus_per_node, args):
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(args, optimizer, epoch)
         if epoch < args.warm_epochs:
-            criterion =SupConLoss(temperature=0.1).cuda()
+            criterion =SupConLoss(temperature=args.temperature).cuda()
         else:
-             if args.train_rule != 'Ranking':
+             if args.train_rule != 'Rank':
                 if epoch % args.step == 0:
                     targets=cluster(train_loader_cluster,model,cluster_number,args)
                     train_dataset.new_labels = targets 
@@ -188,7 +182,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
             features_sum.append(features)
     features= torch.cat(features_sum,dim=0)
     features = torch.split(features, args.cls_num_list, dim=0)
-    if args.train_rule == 'Ranking':
+    if args.train_rule == 'Rank':
          feature_center = [torch.mean(t, dim=0) for t in features]
          feature_center = torch.cat(feature_center,axis = 0)
          feature_center=feature_center.reshape(args.num_classes,args.feat_dim)
@@ -205,7 +199,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
     target = [[] for i in range(len(cluster_number))]
     for i in range(len(cluster_number)):  
         if cluster_number[i] >1:
-            cluster_ids_x, cluster_centers  = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3,device=torch.device("cuda"))
+            cluster_ids_x, _ = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3,device=torch.device("cuda"))
             target[i]=cluster_ids_x
         else:
             target[i] = torch.zeros(1,features[i].size()[0], dtype=torch.int).squeeze(0)
@@ -214,7 +208,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
          target[i] =  torch.add(target[i], k)
     targets=torch.cat(target,dim=0)
     targets = targets.numpy().tolist()
-    if args.train_rule == 'Ranking':
+    if args.train_rule == 'Rank':
         return targets,density
     else:
         return targets
