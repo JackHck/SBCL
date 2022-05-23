@@ -1,7 +1,8 @@
-# subclass-balancing-contrastive-learning
+# Subclass-balancing-contrastive-learning
 This repository provides the  code for paper: <br>
 **Subclass-balancing Contrastive Learning for Long-tailed Recognition**
-# Overview
+
+### Overview
 In this paper, we prospose subclass-balancing contrastive learning (SBCL),
 a novel supervised contrastive learning defined on subclasses, which are the clusters within each
 head class, have comparable size as tail classes, and are adaptively updated during the training.
@@ -14,3 +15,9 @@ the former learns representations with balanced and compact subclasses, the latt
 structure on subclass level by encouraging the same class’s subslasses to be closer to each other than
 to any different class’s subclasses. Hence, it can learn an accurate classifier distinguishing original
 classes while enjoy both the instance- and subclass-balance.
+### Requiremenmts
+* ImageNet dataset
+* Python ≥ 3.6
+* PyTorch ≥ 1.4
+* pip install kmeans_pytorch (the iteration be set at less than 25)
+### CIFAR datasets
