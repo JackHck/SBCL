@@ -27,25 +27,22 @@ classes while enjoy both the instance- and subclass-balance.
 The code will help you download the CIFAR dataset.
 ### First-stage train
 To perform SBCL using 2-gpu machines, run:
-<pre>python main_pcl.py \ 
-  -a resnet50 \ 
-  --lr 0.03 \
-  --batch-size 256 \
-  --temperature 0.2 \
-  --mlp --aug-plus --cos (only activated for PCL v2) \	
-  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
-  --exp-dir experiment_pcl
-  [Imagenet dataset folder]
+<pre>python SimCLR/main.py \ 
+  --dataset cifar100 \ 
+  --imb_factor 0.01 \
+  --lr 0.5\
+  --batch-size 128 \
+  --temperature 0.1 
 </pre>
+NOTE:
+Only change the dataset and imb_factor can change the CIFAR dataset.  For the CIFAR-10-LT dataset, <pre> -step </pre>
 ### Second-stage train
 To evalute the representation learning, run
-<pre>python eval_cls_imagenet.py --pretrained [your pretrained model] \
-  -a resnet50 \ 
-  --lr 5 \
-  --batch-size 256 \
-  --id ImageNet_linear \ 
-  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
-  [Imagenet dataset folder]
+<pre>python SimCLR/linear_classify.py  \
+  --dataset 'cifar100' \ 
+  --imb_factor 0.01 \
+  --train_rule 'DRW' \
+  --epochs 200 
 </pre>
 
 ## ImageNet-LT dataset
@@ -55,7 +52,7 @@ To perform SBCL using 8-gpu machines, run:
 <pre>python main_pcl.py \ 
   -a resnet50 \ 
   --lr 0.03 \
-  --batch-size 256 \
+  --batch_size 256 \
   --temperature 0.2 \
   --mlp --aug-plus --cos (only activated for PCL v2) \	
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
