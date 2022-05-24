@@ -22,7 +22,6 @@ import torchvision.models as models
 import moco
 from kmeans_pytorch import kmeans
 from imagenet_lt_loader import ImageNetLT_moco
-from kcl import KCL
 from utils import*
 from loss import*
 
@@ -55,10 +54,9 @@ parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
 parser.add_argument('--cluster', default=20, type=int,
-                    help='contorl cluster number')
+                    help='control cluster number')
 parser.add_argument('--step', default=5, type=int,
                     help='step for updating cluster')
-parser.add_argument('--train_rule', default='SCL', type=str, help='strategy for train loader')
 parser.add_argument('-p', '--print-freq', default=20, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -159,7 +157,6 @@ def main_worker(gpu, ngpus_per_node, args):
     args.data = 'autodl-tmp/imagenet'
     traindir = os.path.join(args.data, 'train')
     txt_train = f'moco/ImageNet_LT_train.txt'
-    txt_test = f'moco/ImageNet_LT_test.txt'
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     
     if args.aug_plus:
@@ -186,14 +183,6 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize
         ]
     transform_train = [transforms.Compose(augmentation), transforms.Compose(augmentation)]
-    augmentation = [
-            transforms.RandomResizedCrop(224, scale=(0.2, 1.)),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize
-        ]   
     train_dataset = ImageNetLT_moco(
         root=args.data,
         txt=txt_train,
@@ -239,7 +228,6 @@ def main_worker(gpu, ngpus_per_node, args):
     
     # optionally resume from a checkpoint
     if args.resume:
-        print(os.path.isfile(args.resume))
         if os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
             if args.gpu is None:
@@ -309,6 +297,7 @@ def main_worker(gpu, ngpus_per_node, args):
             targets=cluster(train_loader_cluster,model,cluster_number,args)
             train_dataset.new_labels = targets  
         train(train_loader, model, criterion, optimizer,epoch+pretrain_epochs,args)
+        
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
                 save_checkpoint({
