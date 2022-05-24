@@ -304,7 +304,7 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.distributed:
                 train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, tsc_epochs, args)
-        criterion = SupConLoss_ccl(K=args.moco_k,temperature=args.moco_t).cuda() 
+        criterion = SupConLoss_rank(K=args.moco_k,temperature=args.moco_t).cuda() 
         if epoch % args.step == 0:
             targets=cluster(train_loader_cluster,model,cluster_number,args)
             train_dataset.new_labels = targets  
