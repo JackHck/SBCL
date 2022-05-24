@@ -275,7 +275,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
                 }, is_best=False, filename='Imagenet/last.pth.tar')
-                if (epoch + 1) % 100== 0:
+                if (epoch + 1) % 50== 0:
                     save_checkpoint({
                         'epoch': epoch + 1,
                         'arch': args.arch,
@@ -306,7 +306,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
                 }, is_best=False, filename='Imagenet/last.pth.tar')
-                if (epoch + 1) % 100== 0:
+                if (epoch + 1) % 50== 0:
                     save_checkpoint({
                         'epoch': epoch + 1,
                         'arch': args.arch,
