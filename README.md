@@ -44,7 +44,7 @@ To evalute the representation learning, run
   --train_rule 'DRW' \
   --epochs 200 
 </pre>
-
+NOTE:
 ## ImageNet-LT dataset
 You should download ImageNet-LT dataset manually.
 ### First-stage train
