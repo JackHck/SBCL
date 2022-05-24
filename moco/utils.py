@@ -56,12 +56,13 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 class AddGaussianNoise(object):
+    
     def __init__(self, mean=0., std=1.):
         self.std = std
         self.mean = mean
         
     def __call__(self, tensor):
-        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean 
     
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
@@ -80,7 +81,7 @@ class GaussianBlur(object):
 
     def __init__(self, sigma=[.1, 2.]):
         self.sigma = sigma
-
+        
     def __call__(self, x):
         sigma = random.uniform(self.sigma[0], self.sigma[1])
         x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
@@ -88,16 +89,17 @@ class GaussianBlur(object):
 
     
 class ProgressMeter(object):
+    
     def __init__(self, num_batches, meters, prefix=""):
         self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
         self.meters = meters
         self.prefix = prefix
-
+        
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
         print('\t'.join(entries))
-
+        
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
@@ -106,8 +108,6 @@ class ProgressMeter(object):
     
     
 def shot_acc (preds, labels, cls, many_shot_thr=100, low_shot_thr=20):
-    
-
     if isinstance(preds, torch.Tensor):
         preds = preds.detach().cpu().numpy()
         labels = labels.detach().cpu().numpy()
@@ -142,7 +142,7 @@ def shot_acc (preds, labels, cls, many_shot_thr=100, low_shot_thr=20):
     return [np.mean(many_shot), np.mean(median_shot), np.mean(low_shot)]
 
 class NormedLinear_Classifier(nn.Module):
-
+    
     def __init__(self, num_classes=100, feat_dim=64):
         super(NormedLinear_Classifier, self).__init__()
         self.weight = Parameter(torch.Tensor(feat_dim, num_classes))
