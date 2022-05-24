@@ -20,8 +20,8 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from sample import ClassAwareSampler
 from loss import LDAMLoss
-from utils import*
 from imagenet_lt_loader import ImageNetLT_moco, ImageNetLT_val
+from utils import*
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -35,26 +35,26 @@ parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet50',
                         ' (default: resnet50)')
 parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
-parser.add_argument('--epochs', default=45, type=int, metavar='N',
+parser.add_argument('--epochs', default=40, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=512, type=int,
+parser.add_argument('-b', '--batch-size', default=2048, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
 parser.add_argument('--train_rule', default='CB', type=str, help='data sampling strategy for train loader')
-parser.add_argument('--lr', '--learning-rate', default=2.5, type=float,
+parser.add_argument('--lr', '--learning-rate', default=10, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
-parser.add_argument('--schedule', default=[25, 35], nargs='*', type=int,
+parser.add_argument('--schedule', default=[20, 30], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by a ratio)')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
 parser.add_argument('--wd', '--weight-decay', default=0, type=float,
                     metavar='W', help='weight decay (default: 0.)',
                     dest='weight_decay')
-parser.add_argument('-p', '--print-freq', default=20, type=int,
+parser.add_argument('-p', '--print-freq', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
@@ -70,7 +70,7 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 
-parser.add_argument('--pretrained', default='Imagenet1/sclcheckpoint_0399.pth.tar', type=str,
+parser.add_argument('--pretrained', default='', type=str,
                     help='path to moco pretrained checkpoint')
 best_acc1 = 0
 
@@ -111,32 +111,34 @@ def main():
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
-        print("=> loading checkpoint '{}'".format(args.pretrained))
-        checkpoint = torch.load(args.pretrained, map_location="cpu")
+       if os.path.isfile(args.pretrained):
+          print("=> loading checkpoint '{}'".format(args.pretrained))
+          checkpoint = torch.load(args.pretrained, map_location="cpu")
 
-        # rename moco pre-trained keys
-        state_dict = checkpoint['state_dict']
-        for k in list(state_dict.keys()):
-                # retain only encoder_q up to before the embedding layer
+          # rename moco pre-trained keys
+          state_dict = checkpoint['state_dict']
+          for k in list(state_dict.keys()):
+              # retain only encoder_q up to before the embedding layer
             if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
-                    # remove prefix
+                 # remove prefix
                 state_dict[k[len("module.encoder_q."):]] = state_dict[k]
-                # delete renamed or unused k
+            # delete renamed or unused k
             del state_dict[k]
 
-        args.start_epoch = 0
-        msg = model.load_state_dict(state_dict, strict=False)
-        if args.train_rule == 'CB' or args.train_rule == 'CE':
-            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+          args.start_epoch = 0
+          msg = model.load_state_dict(state_dict, strict=False)
+          if args.train_rule == 'CB' or args.train_rule == 'CE':
+              assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
 
-        print("=> loaded pre-trained model '{}'".format(args.pretrained))
+          print("=> loaded pre-trained model '{}'".format(args.pretrained))
 
     model = torch.nn.DataParallel(model).cuda()
 
 
     # optimize only the linear classifier
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-    assert len(parameters) == 2  # fc.weight, fc.bias
+    if args.train_rule == 'CB' or args.train_rule == 'CE':
+        assert len(parameters) == 2  # fc.weight, fc.bias
     optimizer = torch.optim.SGD(parameters, args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -250,17 +252,17 @@ def main():
         output_best = 'Best Prec@1: %.3f\n' % (best_acc1)
         print(output_best)
         print(its_ece)
-        '''
+        
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0) and ((epoch+1) % 10==0):
+                and args.rank % ngpus_per_node == 0) :
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=False,filename='Imagenet/liner_checkpoint_{:04d}.pth.tar'.format(epoch))
-        ''' 
+            }, is_best=False,filename='Imagenet/liner_checkpoint.pth.tar')
+        
 def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -279,10 +281,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
     end = time.time()
     for i, (images, target,index) in enumerate(train_loader):
-        # measure data loading time
-        data_time.update(time.time() - end)
         if i == epoch_steps:
             break
+         # measure data loading time
+        data_time.update(time.time() - end)
         if args.gpu is not None:
             images = images.cuda(args.gpu, non_blocking=True)
         target = target.cuda(args.gpu, non_blocking=True)
