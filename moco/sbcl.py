@@ -54,9 +54,11 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
 parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
-parser.add_argument('--warmup_epochs', default=200, type=int,
-                    help='warmup epochs')
-parser.add_argument('--train_rule', default='SCL', type=str, help='data sampling strategy for train loader')
+parser.add_argument('--cluster', default=20, type=int,
+                    help='contorl cluster number')
+parser.add_argument('--step', default=5, type=int,
+                    help='step for updating cluster')
+parser.add_argument('--train_rule', default='SCL', type=str, help='strategy for train loader')
 parser.add_argument('-p', '--print-freq', default=20, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -198,7 +200,7 @@ def main_worker(gpu, ngpus_per_node, args):
         transform=transform_train)
     args.num_class = 1000
     args.cls_num_list = train_dataset.cls_num_list
-    cluster_number= [t//max(min(args.cls_num_list),30) for t in args.cls_num_list]
+    cluster_number= [t//max(min(args.cls_num_list),args.cluster) for t in args.cls_num_list]
     for index, value in enumerate(cluster_number):
          if value==0:
             cluster_number[index]=1
@@ -269,7 +271,7 @@ def main_worker(gpu, ngpus_per_node, args):
         num_workers=args.workers, pin_memory=True)
     pretrain_epochs = args.epochs // 2
     tsc_epochs = args.epochs - pretrain_epochs
-    '''
+ 
     for epoch in range(args.start_epoch, pretrain_epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -297,13 +299,13 @@ def main_worker(gpu, ngpus_per_node, args):
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                     momentum=args.momentum,
                                     weight_decay=args.weight_decay)
-    '''
+
     for epoch in range(args.start_epoch,tsc_epochs):
         if args.distributed:
                 train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, tsc_epochs, args)
-        criterion = SupConLoss_ccl(K=args.moco_k,temperature=args.moco_t).cuda()
-        if epoch % 5 == 0:
+        criterion = SupConLoss_ccl(K=args.moco_k,temperature=args.moco_t).cuda() 
+        if epoch % args.step == 0:
             targets=cluster(train_loader_cluster,model,cluster_number,args)
             train_dataset.new_labels = targets  
         train(train_loader, model, criterion, optimizer,epoch+pretrain_epochs,args)
