@@ -70,7 +70,9 @@ To perform SBCL using 8-gpu machines, run:
 
 ### Second-stage train
 To evalute the representation learning, run
-<pre>python moco/linear_classsify.py --pretrained [your pretrained model] \
+<pre>python moco/linear_classsify.py 
+  --pretrained [your pretrained model] \
+  -a resnet50 \ 
   --lr 10 \
   --batch-size 2048 \
   --train_rule 'CB'\
