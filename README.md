@@ -22,9 +22,10 @@ classes while enjoy both the instance- and subclass-balance.
 * ImageNet dataset
 * Python ≥ 3.6
 * PyTorch ≥ 1.4
+* scikit-learn
 * pip install kmeans_pytorch (the iteration be set at less than 25)
 ## CIFAR dataset
-The code will help you download the CIFAR dataset.
+The code will help you download the CIFAR dataset. Only change the dataset and imb_factor can change the CIFAR dataset.
 ### First-stage train
 To perform SBCL using 2-gpu machines, run:
 <pre>python SimCLR/main.py \ 
@@ -34,31 +35,39 @@ To perform SBCL using 2-gpu machines, run:
   --batch-size 128 \
   --temperature 0.1 
 </pre>
-NOTE:
-Only change the dataset and imb_factor can change the CIFAR dataset.  For the CIFAR-10-LT dataset, <pre> -step 100 </pre>
+
 ### Second-stage train
-To evalute the representation learning, run
+To evalute the representation learning, our code support [cRT](https://arxiv.org/abs/1910.09217) and [LDAM](https://arxiv.org/abs/1906.07413) to learn the classify.
+We report the accuracy of LDAM in this paper.
+#### LDAM training 
 <pre>python SimCLR/linear_classify.py  \
   --dataset 'cifar100' \ 
   --imb_factor 0.01 \
   --train_rule 'DRW' \
   --epochs 200 
 </pre>
+#### cRT for training 
+<pre>python SimCLR/linear_classify.py  \
+  --dataset 'cifar100' \ 
+  --imb_factor 0.01 \
+  --train_rule 'CB' \
+  --epochs 45 
+</pre>
 NOTE:
+For the CIFAR-10 datasets, we should increase steps for updaing the clusters.
 ## ImageNet-LT dataset
-You should download ImageNet-LT dataset manually.
+You should download [ImageNet-LT](http://image-net.org/download) dataset manually, and place them in your `data_root`. Long-tailed version will be created using train/val splits (.txt files) in corresponding subfolders under `moco/imagenet_lt`.
+You should change the `data_root` and `save_folder` in [`moco/sbcl.py`](.moco/sbcl.py) and [`moco/linear_classify.py`](.moco/linear_classif.py) accordingly for ImageNet-LT.
 ### First-stage train
 To perform SBCL using 8-gpu machines, run:
-<pre>python main_pcl.py \ 
+<pre>python moco/sbcl.py \ 
   -a resnet50 \ 
-  --lr 0.03 \
+  --lr 0.1 \
   --batch_size 256 \
-  --temperature 0.2 \
-  --mlp --aug-plus --cos (only activated for PCL v2) \	
+  --temperature 0.07\
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
-  --exp-dir experiment_pcl
-  [Imagenet dataset folder]
 </pre>
+
 ### Second-stage train
 To evalute the representation learning, run
 <pre>python eval_cls_imagenet.py --pretrained [your pretrained model] \
