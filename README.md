@@ -66,7 +66,7 @@ To perform SBCL using 8-gpu machines, run:
   --lr 0.1 \
   --batch_size 256 \
   --temperature 0.07\
-  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
+  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 
 </pre>
 
 ### Second-stage train
@@ -77,7 +77,7 @@ To evalute the representation learning, run
   --lr 10 \
   --batch_size 2048 \
   --train_rule 'CB'\
-  --epochs 40 --schedule 20 30 --seed 0\
+  --epochs 40 --schedule 20 30 --seed 0
 </pre>
 NOTE: 
 In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
