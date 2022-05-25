@@ -75,7 +75,7 @@ To evalute the representation learning, run
   --pretrained [your pretrained model] \
   -a resnet50 \ 
   --lr 10 \
-  --batch-size 2048 \
+  --batch_size 2048 \
   --train_rule 'CB'\
   --epochs 40 --schedule 20 30 --seed 0\
 </pre>
