@@ -37,7 +37,7 @@ To perform SBCL using 2-gpu machines, run:
 </pre>
 
 ### Second-stage train
-To evalute the representation learning, our code support [cRT](https://arxiv.org/abs/1910.09217) and [LDAM](https://arxiv.org/abs/1906.07413) to learn the classify.
+To evalute the representation learning, our code support [Classifier-Balancing](https://arxiv.org/abs/1910.09217) and [LDAM](https://arxiv.org/abs/1906.07413) to learn the classify.
 We report the accuracy of LDAM in this paper.
 #### LDAM training 
 <pre>python SimCLR/linear_classify.py  \
@@ -46,7 +46,7 @@ We report the accuracy of LDAM in this paper.
   --train_rule 'DRW' \
   --epochs 200 
 </pre>
-#### cRT for training 
+#### Classifier-Balancing  training 
 <pre>python SimCLR/linear_classify.py  \
   --dataset 'cifar100' \ 
   --imb_factor 0.01 \
@@ -70,14 +70,13 @@ To perform SBCL using 8-gpu machines, run:
 
 ### Second-stage train
 To evalute the representation learning, run
-<pre>python eval_cls_imagenet.py --pretrained [your pretrained model] \
-  -a resnet50 \ 
-  --lr 5 \
-  --batch-size 256 \
-  --id ImageNet_linear \ 
-  --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 \
-  [Imagenet dataset folder]
+<pre>python moco/linear_classsify.py --pretrained [your pretrained model] \
+  --lr 10 \
+  --batch-size 2048 \
+  --train_rule 'CB'\
+  --epochs 40 --schedule 20 30 --seed 0\
 </pre>
 NOTE: 
-many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
-
+In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier is added on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
+## Acknowledgement
+This code inherits some codes from [MoCo](https://github.com/facebookresearch/moco), [Classifier-Balancing](https://github.com/facebookresearch/classifier-balancing) and [LDAM](https://arxiv.org/abs/1906.07413).
