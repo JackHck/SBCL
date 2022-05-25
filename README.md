@@ -35,6 +35,8 @@ To perform SBCL using 2-gpu machines, run:
   --batch-size 128 \
   --temperature 0.1 
 </pre>
+NOTE:
+For the CIFAR-10 datasets, we should increase steps for updaing the clusters.
 
 ### Second-stage train
 To evalute the representation learning, our code support [Classifier-Balancing](https://arxiv.org/abs/1910.09217) and [LDAM](https://arxiv.org/abs/1906.07413) to learn the classify.
@@ -53,8 +55,7 @@ We report the accuracy of LDAM in this paper.
   --train_rule 'CB' \
   --epochs 45 
 </pre>
-NOTE:
-For the CIFAR-10 datasets, we should increase steps for updaing the clusters.
+
 ## ImageNet-LT dataset
 You should download [ImageNet-LT](http://image-net.org/download) dataset manually, and place them in your `data_root`. Long-tailed version will be created using train/val splits (.txt files) in corresponding subfolders under `moco/imagenet_lt`.
 You should change the `data_root` and `save_folder` in [`moco/sbcl.py`](.moco/sbcl.py) and [`moco/linear_classify.py`](.moco/linear_classif.py) accordingly for ImageNet-LT.
