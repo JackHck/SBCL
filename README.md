@@ -79,6 +79,6 @@ To evalute the representation learning, run
   --epochs 40 --schedule 20 30 --seed 0\
 </pre>
 NOTE: 
-In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier is added on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
+In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
 ## Acknowledgement
 This code inherits some codes from [MoCo](https://github.com/facebookresearch/moco), [Classifier-Balancing](https://github.com/facebookresearch/classifier-balancing) and [LDAM](https://arxiv.org/abs/1906.07413).
