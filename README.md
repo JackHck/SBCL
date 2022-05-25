@@ -25,7 +25,7 @@ classes while enjoy both the instance- and subclass-balance.
 * scikit-learn
 * pip install kmeans_pytorch (the iteration be set at less than 25)
 ## CIFAR dataset
-The code will help you download the CIFAR dataset. Only change the dataset and imb_factor can change the CIFAR dataset.
+The code will help you download the CIFAR dataset automaticly. Only change the dataset and imb_factor can change the CIFAR dataset.
 ### First-stage train
 To perform SBCL using 2-gpu machines, run:
 <pre>python SimCLR/main.py \ 
