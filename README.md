@@ -32,7 +32,7 @@ To perform SBCL using 2-gpu machines, run:
   --dataset 'cifar100' \ 
   --imb_factor 0.01 \
   --lr 0.5\
-  --batch-size 128 \
+  --batch_size 128 \
   --temperature 0.1 
 </pre>
 NOTE:
@@ -64,7 +64,7 @@ To perform SBCL using 8-gpu machines, run:
 <pre>python moco/sbcl.py \ 
   -a resnet50 \ 
   --lr 0.1 \
-  --batch-size 256 \
+  --batch_size 256 \
   --temperature 0.07\
   --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 
 </pre>
@@ -75,7 +75,7 @@ To evalute the representation learning, run:
   --pretrained [your pretrained model] \
   -a resnet50 \ 
   --lr 10 \
-  --batch-size 2048 \
+  --batch_size 2048 \
   --train_rule 'CB'\
   --epochs 40 --schedule 20 30 --seed 0
 </pre>
