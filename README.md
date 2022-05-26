@@ -29,7 +29,7 @@ The code will help you download the CIFAR dataset automatically. Only change the
 ### First-stage train
 To perform SBCL using 2-gpu machines, run:
 <pre>python SimCLR/main.py \ 
-  --dataset cifar100 \ 
+  --dataset 'cifar100' \ 
   --imb_factor 0.01 \
   --lr 0.5\
   --batch-size 128 \
