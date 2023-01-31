@@ -32,7 +32,7 @@ To perform SBCL using 2-gpu machines, run:
   --dataset 'cifar100' \ 
   --imb_factor 0.01 \
   --lr 0.5\
-  --batch_size 128 \
+  --batch_size 1024 \
   --temperature 0.1 
 </pre>
 NOTE:
