@@ -100,7 +100,7 @@ def balanced_kmean(
         if center_shift ** 2 < tol:
             break
 
-    return cluster_assignment.cpu().numpy(), centroids.cpu().numpy()
+    return cluster_assignment.cpu(), centroids.cpu()
 
 
 # def balanced_kmeans1(
