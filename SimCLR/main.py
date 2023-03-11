@@ -20,6 +20,7 @@ import torch.nn.functional as F
 import os, sys
 sys.path.append(os.getcwd())
 from resnet import SupConResNet
+from balanced_clustering import balanced_kmean
 from kmeans_pytorch import kmeans
 from unbalance import IMBALANCECIFAR10, IMBALANCECIFAR100
 from  loss import SupConLoss_ccl,SupConLoss_rank,SupConLoss
@@ -53,6 +54,8 @@ parser.add_argument('--lr_decay_rate', default=0.1,type=float,
 parser.add_argument('--wd', '--weight-decay',default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)',
                     dest='weight_decay')
+parser.add_argument('--cluster_method', default=False, type=str, 
+                    help='chose to balance cluster')
 parser.add_argument('--cluster', default=10, type=int,
                     metavar='N', help='the low limit of cluster')
 parser.add_argument('--seed', default=None, type=int,
@@ -199,8 +202,12 @@ def cluster (train_loader_cluster,model,cluster_number,args):
     target = [[] for i in range(len(cluster_number))]
     for i in range(len(cluster_number)):  
         if cluster_number[i] >1:
+          if args.cluster_method:
+            cluster_ids_x, _ = balanced_kmean(X=features[i], num_clusters=cluster_number[i], distance='cosine', init='k-means++',iol=50,tol=1e-3,device=torch.device("cuda"))
+          else:
             cluster_ids_x, _ = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3,device=torch.device("cuda"))
-            target[i]=cluster_ids_x
+            #run faster for cluster
+          target[i]=cluster_ids_x
         else:
             target[i] = torch.zeros(1,features[i].size()[0], dtype=torch.int).squeeze(0)
     cluster_number_sum=[sum(cluster_number[:i]) for i in range(len(cluster_number))]
