@@ -51,7 +51,7 @@ def balanced_kmean(
     n_left = N % n_clusters
     for i in trange(iol):
         similarity_matrix = pairwise_similarity_function(centroids, X)
-        #similarity_matrix = similarity_matrix / similarity_matrix.sum(dim=1, keepdim=True)
+        similarity_matrix = similarity_matrix / similarity_matrix.sum(dim=1, keepdim=True)
         cluster_assignment = torch.zeros(N, dtype=torch.long) - 1
         cluster_size = {c: 0 for c in range(n_clusters)}
 
