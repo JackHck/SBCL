@@ -331,7 +331,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
     target = [[] for i in range(len(cluster_number))]
     for i in range(len(cluster_number)):  
         if cluster_number[i] >1:
-            cluster_ids_x, cluster_centers  = kmeans(X=features[i], num_clusters=cluster_number[i], tol=1e-3, distance='cosine', device=torch.device("cuda"))
+            cluster_ids_x, cluster_centers = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3, iter_limit=35, device=torch.device("cuda"))
             target[i]=cluster_ids_x
         else:
             target[i] = torch.zeros(1,features[i].size()[0], dtype=torch.int).squeeze(0)
