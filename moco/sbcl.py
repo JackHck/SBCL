@@ -20,7 +20,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import moco
-from kmeans_pytorch import kmeans
+from kmeans import kmeans
 from imagenet_lt_loader import ImageNetLT_moco
 from utils import*
 from loss import*
