@@ -193,7 +193,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
          for i in range(len(cluster_number)):  
             center_distance = F.pairwise_distance(features[i], feature_center[i], p=2).mean()/np.log(len(features[i])+10) 
             density[i] = center_distance.cpu().numpy()
-         density = density.clip(np.percentile(density,10),np.percentile(density,90)) 
+         density = density.clip(np.percentile(density,20),np.percentile(density,80)) 
          #density = args.temperature*np.exp(density/density.mean())
          density = args.temperature*(density/density.mean())
          for index, value in enumerate(cluster_number):
