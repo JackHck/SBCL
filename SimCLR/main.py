@@ -205,7 +205,7 @@ def cluster (train_loader_cluster,model,cluster_number,args):
           if args.cluster_method:
             cluster_ids_x, _ = balanced_kmean(X=features[i], num_clusters=cluster_number[i], distance='cosine', init='k-means++',iol=50,tol=1e-3,device=torch.device("cuda"))
           else:
-            cluster_ids_x, _ = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3,device=torch.device("cuda"))
+            cluster_ids_x, _ = kmeans(X=features[i], num_clusters=cluster_number[i], distance='cosine', tol=1e-3, iter_limit=35, device=torch.device("cuda"))
             #run faster for cluster
           target[i]=cluster_ids_x
         else:
