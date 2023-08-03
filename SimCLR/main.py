@@ -21,7 +21,7 @@ import os, sys
 sys.path.append(os.getcwd())
 from resnet import SupConResNet
 from balanced_clustering import balanced_kmean
-from kmeans_pytorch import kmeans
+from kmeans import kmeans
 from unbalance import IMBALANCECIFAR10, IMBALANCECIFAR100
 from  loss import SupConLoss_ccl,SupConLoss_rank,SupConLoss
 from utils import*
