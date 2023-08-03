@@ -23,7 +23,6 @@ classes while enjoy both the instance- and subclass-balance.
 * Python ≥ 3.6
 * PyTorch ≥ 1.4
 * scikit-learn
-* pip install kmeans_pytorch (the iteration be set at less than 35)
 ## CIFAR dataset
 The code will help you download the CIFAR dataset automatically. Only change the `--dataset` and `--imb_factor` can change the CIFAR dataset.
 ### First-stage train
