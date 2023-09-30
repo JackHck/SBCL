@@ -84,7 +84,7 @@ NOTE:
 In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
 
 ## Citation
-If you find MADAug helpful in your research, please consider citing: 
+If you find SBCL helpful in your research, please consider citing: 
 ```bibtex   
 @article{hou2023subclass,
   title={Subclass-balancing contrastive learning for long-tailed recognition},
