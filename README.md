@@ -1,4 +1,4 @@
-# [ICCV 2023] Subclass-balancing-contrastive-learning
+# [ICCV 2023] Subclass-balancing contrastive learning for long-tailed recognition
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-<COLOR>.svg)]([https://arxiv.org/abs/2306.15925])
 
 This repository provides the  code for paper: <br>
