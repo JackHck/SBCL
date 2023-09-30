@@ -1,4 +1,5 @@
-# Subclass-balancing-contrastive-learning
+# [ICCV 2023] Subclass-balancing-contrastive-learning
+[![arXiv](https://img.shields.io/badge/arXiv-Paper-<COLOR>.svg)]([https://arxiv.org/abs/2306.15925])
 This repository provides the  code for paper: <br>
 **Subclass-balancing Contrastive Learning for Long-tailed Recognition**
 <p align="center">
@@ -80,5 +81,16 @@ To evalute the representation learning, run:
 </pre>
 NOTE: 
 In this code, we also can use [LDAM](https://arxiv.org/abs/1906.07413) loss to train the linear classifier on top of the representation. Many/medium/minor classes accuracy could change significantly with different learning rate or batch size in the second stage while overall accuracy remains the same.
+
+## Citation
+If you find MADAug helpful in your research, please consider citing: 
+```bibtex   
+@article{hou2023subclass,
+  title={Subclass-balancing contrastive learning for long-tailed recognition},
+  author={Hou, Chengkai and Zhang, Jieyu and Wang, Haonan and Zhou, Tianyi},
+  journal={arXiv preprint arXiv:2306.15925},
+  year={2023}
+}
+```
 ## Acknowledgement
 This code inherits some codes from [MoCo](https://github.com/facebookresearch/moco), [Classifier-Balancing](https://github.com/facebookresearch/classifier-balancing) and [LDAM](https://arxiv.org/abs/1906.07413).
