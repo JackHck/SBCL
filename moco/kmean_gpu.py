@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from .soft_dtw_cuda import SoftDTW
+#from .soft_dtw_cuda import SoftDTW
 
 
 def initialize(X, num_clusters, seed):
@@ -56,9 +56,9 @@ def kmeans(
         pairwise_distance_function = partial(pairwise_distance, device=device, tqdm_flag=tqdm_flag)
     elif distance == 'cosine':
         pairwise_distance_function = partial(pairwise_cosine, device=device)
-    elif distance == 'soft_dtw':
-        sdtw = SoftDTW(use_cuda=device.type == 'cuda', gamma=gamma_for_soft_dtw)
-        pairwise_distance_function = partial(pairwise_soft_dtw, sdtw=sdtw, device=device)
+    #elif distance == 'soft_dtw':
+    #    sdtw = SoftDTW(use_cuda=device.type == 'cuda', gamma=gamma_for_soft_dtw)
+    #    pairwise_distance_function = partial(pairwise_soft_dtw, sdtw=sdtw, device=device)
     else:
         raise NotImplementedError
 
@@ -151,9 +151,9 @@ def kmeans_predict(
         pairwise_distance_function = partial(pairwise_distance, device=device, tqdm_flag=tqdm_flag)
     elif distance == 'cosine':
         pairwise_distance_function = partial(pairwise_cosine, device=device)
-    elif distance == 'soft_dtw':
-        sdtw = SoftDTW(use_cuda=device.type == 'cuda', gamma=gamma_for_soft_dtw)
-        pairwise_distance_function = partial(pairwise_soft_dtw, sdtw=sdtw, device=device)
+    #elif distance == 'soft_dtw':
+    #    sdtw = SoftDTW(use_cuda=device.type == 'cuda', gamma=gamma_for_soft_dtw)
+    #    pairwise_distance_function = partial(pairwise_soft_dtw, sdtw=sdtw, device=device)
     else:
         raise NotImplementedError
 
@@ -207,30 +207,3 @@ def pairwise_cosine(data1, data2, device=torch.device('cpu')):
     # return N*N matrix for pairwise distance
     cosine_dis = 1 - cosine.sum(dim=-1).squeeze()
     return cosine_dis
-
-
-def pairwise_soft_dtw(data1, data2, sdtw=None, device=torch.device('cpu')):
-    if sdtw is None:
-        raise ValueError('sdtw is None - initialize it with SoftDTW')
-
-    # transfer to device
-    data1, data2 = data1.to(device), data2.to(device)
-
-    # (batch_size, seq_len, feature_dim=1)
-    A = data1.unsqueeze(dim=2)
-
-    # (cluster_size, seq_len, feature_dim=1)
-    B = data2.unsqueeze(dim=2)
-
-    distances = []
-    for b in B:
-        # (1, seq_len, 1)
-        b = b.unsqueeze(dim=0)
-        A, b = torch.broadcast_tensors(A, b)
-        # (batch_size, 1)
-        sdtw_distance = sdtw(b, A).view(-1, 1)
-        distances.append(sdtw_distance)
-
-    # (batch_size, cluster_size)
-    dis = torch.cat(distances, dim=1)
-    return dis
