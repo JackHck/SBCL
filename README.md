@@ -62,7 +62,7 @@ You should download [ImageNet-LT](http://image-net.org/download) dataset manuall
 You should change the `data_root` and `save_folder` in [`moco/sbcl.py`](.moco/sbcl.py) and [`moco/linear_classify.py`](.moco/linear_classif.py) accordingly for ImageNet-LT.
 ### First-stage train
 To perform SBCL using 8-gpu machines, run:
-<pre>python moco/sbcl.py \ 
+<pre>python moco/main.py \ 
   -a resnet50 \ 
   --lr 0.1 \
   --batch_size 256 \
